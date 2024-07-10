@@ -1,19 +1,45 @@
-package ru.clevertec.check;
+    package ru.clevertec.check;
+
+import ru.clevertec.check.converter.Converter;
+import ru.clevertec.check.dto.BasketOutputDto;
+import ru.clevertec.check.dto.InputDto;
+import ru.clevertec.check.exception.ExceptionCode;
+import ru.clevertec.check.exception.MyException;
+import ru.clevertec.check.io.CmdWriter;
+import ru.clevertec.check.io.CsvWriter;
+import ru.clevertec.check.io.ResultWriter;
+import ru.clevertec.check.service.CalculationService;
+
+import java.util.List;
 
 // Press Shift twice to open the Search Everywhere dialog and type `show whitespaces`,
 // then press Enter. You can now see whitespace characters in your code.
 public class CheckRunner {
+    private static Converter converter = new Converter();
+    private static CalculationService calculationService = new CalculationService();
+    private static List<ResultWriter> resultWriters = List.of(new CmdWriter(), new CsvWriter());
+
     public static void main(String[] args) {
-        // Press Alt+Enter with your caret at the highlighted text to see how
-        // IntelliJ IDEA suggests fixing it.
-        System.out.printf("Hello and welcome!");
+        try {
+            InputDto inputDto = converter.convertToDto(args);
+            BasketOutputDto basketOutputDto = calculationService.process(inputDto);
+            resultWriters.forEach(r-> {
+                try {
+                    r.writeResult(basketOutputDto);
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        } catch (MyException e) {
+            logError(e);
 
-        // Press Shift+F10 or click the green arrow button in the gutter to run the code.
-        for (int i = 1; i <= 5; i++) {
-
-            // Press Shift+F9 to start debugging your code. We have set one breakpoint
-            // for you, but you can always add more by pressing Ctrl+F8.
-            System.out.println("i = " + i);
+        } catch (Exception e){
+            logError(new Exception(ExceptionCode.INTERNAL_SERVER_ERROR.getTitle()));
         }
+    }
+
+    private static void logError(Exception e){
+//        System.out.println(e.getMessage();
+        //write to file
     }
 }
